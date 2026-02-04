@@ -1751,7 +1751,7 @@
         throw new Error("Missing required parameters");
       }
 
-      const server = base.replace(/\/$/, "") + api;
+      const server = base + api + token + source;
       console.log("API Server:", server);
       const headers = {
         "X-App-Source": source,
