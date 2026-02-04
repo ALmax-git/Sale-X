@@ -1,0 +1,2140 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sale-X Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Space Grotesk", "system-ui", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+            colors: {
+              dark: {
+                900: "#0a0a0f",
+                800: "#12121a",
+                700: "#1a1a25",
+                600: "#252532",
+                500: "#32324a",
+              },
+              accent: {
+                primary: "#6366f1",
+                secondary: "#8b5cf6",
+                success: "#10b981",
+                warning: "#f59e0b",
+                danger: "#ef4444",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      html,
+      body {
+        box-sizing: border-box;
+        height: 100%;
+        width: 100%;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      .glass {
+        background: rgba(26, 26, 37, 0.7);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .glass-light {
+        background: rgba(37, 37, 50, 0.5);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.3);
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(99, 102, 241, 0.5);
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes slideInUp {
+        from {
+          opacity: 0;
+          transform: translateY(100px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes pulse-glow {
+        0%,
+        100% {
+          box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+        50% {
+          box-shadow: 0 0 40px rgba(99, 102, 241, 0.4);
+        }
+      }
+
+      .animate-slide-up {
+        animation: slideUp 0.5s ease-out forwards;
+      }
+
+      .animate-slide-in-up {
+        animation: slideInUp 0.5s ease-out forwards;
+      }
+
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+      }
+
+      .animate-pulse-glow {
+        animation: pulse-glow 2s ease-in-out infinite;
+      }
+
+      .chart-bar {
+        transform-origin: bottom;
+        animation: growUp 0.8s ease-out forwards;
+      }
+
+      @keyframes growUp {
+        from {
+          transform: scaleY(0);
+        }
+        to {
+          transform: scaleY(1);
+        }
+      }
+
+      .stagger-1 {
+        animation-delay: 0.1s;
+      }
+      .stagger-2 {
+        animation-delay: 0.2s;
+      }
+      .stagger-3 {
+        animation-delay: 0.3s;
+      }
+      .stagger-4 {
+        animation-delay: 0.4s;
+      }
+      .stagger-5 {
+        animation-delay: 0.5s;
+      }
+
+      .gradient-text {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .table-row-hover {
+        transition: all 0.2s ease;
+      }
+
+      .table-row-hover:hover {
+        background: rgba(99, 102, 241, 0.1);
+        transform: scale(1.005);
+      }
+
+      .modal-overlay {
+        background: rgba(10, 10, 15, 0.8);
+        backdrop-filter: blur(8px);
+      }
+
+      .nav-icon {
+        transition: all 0.3s ease;
+      }
+
+      .nav-active .nav-icon {
+        transform: scale(1.1);
+      }
+
+      .nav-btn-active {
+        background: linear-gradient(
+          135deg,
+          rgba(99, 102, 241, 0.3),
+          rgba(139, 92, 246, 0.3)
+        );
+      }
+    </style>
+  </head>
+  <body
+    class="h-full w-full bg-dark-900 text-gray-100 font-sans overflow-hidden"
+  >
+    <div
+      x-data="saleXDashboard()"
+      x-init="init()"
+      class="h-full w-full flex flex-col md:flex-row md:pb-0 pb-20"
+    >
+      <!-- Desktop Sidebar -->
+      <aside class="hidden md:flex w-64 glass h-full flex-col flex-shrink-0">
+        <div class="p-4 border-b border-white/5">
+          <div class="flex items-center gap-2">
+            <div
+              class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center animate-pulse-glow"
+            >
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewbox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                />
+              </svg>
+            </div>
+            <span
+              class="text-lg font-bold gradient-text"
+              x-text="dashboardTitle"
+              >Sale-X</span
+            >
+          </div>
+        </div>
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+          <template x-for="(item, index) in navItems" :key="item.id"
+            ><button
+              @click="currentView = item.id"
+              :class="[
+              'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+              currentView === item.id 
+                ? 'bg-gradient-to-r from-accent-primary/20 to-accent-secondary/20 text-white border border-accent-primary/30' 
+                : 'text-gray-400 hover:text-white hover:bg-white/5',
+            ]"
+              :style="'animation-delay: ' + (index * 0.05) + 's'"
+              class="animate-slide-up opacity-0"
+            >
+              <span x-html="item.icon" class="w-5 h-5 flex-shrink-0"></span>
+              <span x-text="item.label" class="font-medium text-sm"></span>
+              <span
+                x-show="item.badge"
+                x-text="item.badge"
+                class="ml-auto text-xs px-2 py-0.5 rounded-full bg-accent-primary/20 text-accent-primary"
+              ></span>
+            </button>
+          </template>
+        </nav>
+        <div class="p-3 border-t border-white/5">
+          <div
+            class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all cursor-pointer"
+          >
+            <div
+              class="w-10 h-10 rounded-full bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white font-bold text-sm"
+            >
+              <span x-text="companyName.charAt(0)">A</span>
+            </div>
+            <div class="min-w-0">
+              <p
+                class="text-sm font-medium text-white truncate"
+                x-text="companyName"
+              >
+                Admin
+              </p>
+              <p class="text-xs text-gray-400 truncate">Administrator</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <!-- Main Content -->
+      <main class="flex-1 flex flex-col overflow-hidden w-full">
+        <!-- Desktop Top Bar -->
+        <header
+          class="hidden md:flex glass-light px-6 py-4 items-center gap-4 flex-shrink-0"
+        >
+          <div class="flex-1 max-w-xl relative">
+            <svg
+              class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewbox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              type="text"
+              x-model="searchQuery"
+              @input="filterData()"
+              placeholder="Search sales, products, staff..."
+              class="w-full pl-12 pr-4 py-2 bg-dark-700/50 border border-white/10 rounded-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-accent-primary/50 focus:ring-2 focus:ring-accent-primary/20 transition-all"
+            />
+          </div>
+          <div class="flex items-center gap-2 glass-light rounded-lg px-3 py-2">
+            <svg
+              class="w-4 h-4 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewbox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <select
+              x-model="dateRange"
+              @change="filterData()"
+              class="bg-transparent text-xs text-gray-300 focus:outline-none cursor-pointer"
+            >
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+              <option value="1y">Last year</option>
+              <option value="all">All time</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-1">
+            <button
+              @click="exportCSV()"
+              class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+              title="Export CSV"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewbox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+            </button>
+            <button
+              @click="printReport()"
+              class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+              title="Print Report"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewbox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                />
+              </svg>
+            </button>
+          </div>
+        </header>
+        <!-- Mobile Header -->
+        <div
+          class="md:hidden glass-light px-4 py-3 flex items-center justify-between flex-shrink-0"
+        >
+          <div class="flex items-center gap-2">
+            <div
+              class="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center animate-pulse-glow"
+            >
+              <svg
+                class="w-4 h-4 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewbox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                />
+              </svg>
+            </div>
+            <span
+              class="text-sm font-bold gradient-text"
+              x-text="dashboardTitle"
+              >Sale-X</span
+            >
+          </div>
+          <div class="flex items-center gap-1">
+            <button
+              @click="exportCSV()"
+              class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5"
+              title="Export"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewbox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto w-full">
+          <div class="p-3 md:p-6 space-y-4 md:space-y-6">
+            <!-- Dashboard View -->
+            <div
+              x-show="currentView === 'dashboard'"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0"
+              x-transition:enter-end="opacity-100"
+            >
+              <!-- KPI Cards -->
+              <div
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4"
+              >
+                <div
+                  class="glass rounded-xl p-4 animate-slide-up opacity-0 stagger-1"
+                >
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="p-2 rounded-lg bg-accent-success/20">
+                      <svg
+                        class="w-5 h-5 text-accent-success"
+                        fill="none"
+                        stroke="currentColor"
+                        viewbox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <span
+                      class="flex items-center gap-0.5 text-xs text-accent-success font-medium"
+                    >
+                      <svg
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewbox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 10l7-7m0 0l7 7m-7-7v18"
+                        />
+                      </svg>
+                      12.5%
+                    </span>
+                  </div>
+                  <p class="text-gray-400 text-xs mb-1">Total Sales</p>
+                  <p class="text-2xl md:text-3xl font-bold text-white">
+                    ₦<span x-text="formatNumber(metrics.totalSales)">0</span>
+                  </p>
+                </div>
+                <div
+                  class="glass rounded-xl p-4 animate-slide-up opacity-0 stagger-2"
+                >
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="p-2 rounded-lg bg-accent-warning/20">
+                      <svg
+                        class="w-5 h-5 text-accent-warning"
+                        fill="none"
+                        stroke="currentColor"
+                        viewbox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                        />
+                      </svg>
+                    </div>
+                    <span
+                      class="flex items-center gap-0.5 text-xs text-accent-warning font-medium"
+                    >
+                      <svg
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewbox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                        />
+                      </svg>
+                      3.2%
+                    </span>
+                  </div>
+                  <p class="text-gray-400 text-xs mb-1">Total Discounts</p>
+                  <p class="text-2xl md:text-3xl font-bold text-white">
+                    ₦<span x-text="formatNumber(metrics.totalDiscount)">0</span>
+                  </p>
+                </div>
+                <div
+                  class="glass rounded-xl p-4 animate-slide-up opacity-0 stagger-3"
+                >
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="p-2 rounded-lg bg-accent-primary/20">
+                      <svg
+                        class="w-5 h-5 text-accent-primary"
+                        fill="none"
+                        stroke="currentColor"
+                        viewbox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
+                      </svg>
+                    </div>
+                    <span
+                      class="flex items-center gap-0.5 text-xs text-accent-success font-medium"
+                    >
+                      <svg
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewbox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 10l7-7m0 0l7 7m-7-7v18"
+                        />
+                      </svg>
+                      8.7%
+                    </span>
+                  </div>
+                  <p class="text-gray-400 text-xs mb-1">Net Revenue</p>
+                  <p class="text-2xl md:text-3xl font-bold text-white">
+                    ₦<span
+                      x-text="formatNumber(metrics.totalSales - metrics.totalDiscount)"
+                      >0</span
+                    >
+                  </p>
+                </div>
+                <div
+                  class="glass rounded-xl p-4 animate-slide-up opacity-0 stagger-4"
+                >
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="p-2 rounded-lg bg-accent-secondary/20">
+                      <svg
+                        class="w-5 h-5 text-accent-secondary"
+                        fill="none"
+                        stroke="currentColor"
+                        viewbox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                        />
+                      </svg>
+                    </div>
+                    <span
+                      class="flex items-center gap-0.5 text-xs text-accent-success font-medium"
+                    >
+                      <svg
+                        class="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewbox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 10l7-7m0 0l7 7m-7-7v18"
+                        />
+                      </svg>
+                      5.3%
+                    </span>
+                  </div>
+                  <p class="text-gray-400 text-xs mb-1">Avg Order Value</p>
+                  <p class="text-2xl md:text-3xl font-bold text-white">
+                    ₦<span x-text="formatNumber(metrics.avgOrderValue)">0</span>
+                  </p>
+                </div>
+              </div>
+              <!-- Charts -->
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4">
+                <!-- Revenue Chart -->
+                <div
+                  class="lg:col-span-2 glass rounded-xl p-4 animate-slide-up opacity-0 stagger-5"
+                >
+                  <div class="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 class="text-base md:text-lg font-semibold text-white">
+                        Revenue Overview
+                      </h3>
+                      <p class="text-xs text-gray-400">Monthly performance</p>
+                    </div>
+                    <div class="flex gap-1">
+                      <button
+                        @click="chartType = 'revenue'"
+                        :class="chartType === 'revenue' ? 'bg-accent-primary text-white' : 'text-gray-400 hover:text-white'"
+                        class="px-2 py-1 rounded text-xs transition-all"
+                      >
+                        Revenue
+                      </button>
+                      <button
+                        @click="chartType = 'orders'"
+                        :class="chartType === 'orders' ? 'bg-accent-primary text-white' : 'text-gray-400 hover:text-white'"
+                        class="px-2 py-1 rounded text-xs transition-all"
+                      >
+                        Orders
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    class="h-48 md:h-72 flex items-end justify-between gap-1 pb-2"
+                  >
+                    <template
+                      x-for="(month, index) in monthlyData"
+                      :key="'month-' + index"
+                    >
+                      <div
+                        class="flex-1 flex flex-col items-center gap-1 h-full"
+                      >
+                        <div
+                          class="flex-1 w-full flex items-end justify-center relative group"
+                        >
+                          <div
+                            class="w-3/4 bg-gradient-to-t from-accent-primary to-accent-secondary rounded-t chart-bar relative cursor-pointer hover:from-accent-primary/80 hover:to-accent-secondary/80 transition-all"
+                            :style="'height: ' + (chartType === 'revenue' ? (month.revenue / maxRevenue * 100) : (month.orders / maxOrders * 100)) + '%; animation-delay: ' + (index * 0.08) + 's'"
+                          >
+                            <div
+                              class="absolute -top-9 left-1/2 -translate-x-1/2 bg-dark-800 px-2 py-1 rounded text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
+                            >
+                              <span
+                                x-text="chartType === 'revenue' ? '₦' + formatNumber(month.revenue) : month.orders + ' orders'"
+                              ></span>
+                            </div>
+                          </div>
+                        </div>
+                        <span
+                          class="text-xs text-gray-500 mt-1 font-medium"
+                          x-text="month.name.substring(0, 3)"
+                        ></span>
+                      </div>
+                    </template>
+                  </div>
+                  <div
+                    class="flex items-center justify-between pt-4 border-t border-white/5 text-xs"
+                  >
+                    <div>
+                      <p class="text-gray-500">Highest:</p>
+                      <p
+                        class="text-sm font-semibold text-accent-primary"
+                        x-text="chartType === 'revenue' ? '₦' + formatNumber(Math.max(...monthlyData.map(m => m.revenue))) : Math.max(...monthlyData.map(m => m.orders)) + ' orders'"
+                      ></p>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-gray-500">Average:</p>
+                      <p
+                        class="text-sm font-semibold text-accent-secondary"
+                        x-text="chartType === 'revenue' ? '₦' + formatNumber(monthlyData.reduce((s,m) => s + m.revenue, 0) / monthlyData.length) : Math.round(monthlyData.reduce((s,m) => s + m.orders, 0) / monthlyData.length) + ' orders'"
+                      ></p>
+                    </div>
+                  </div>
+                </div>
+                <!-- Category Distribution -->
+                <div
+                  class="glass rounded-xl p-4 animate-slide-up opacity-0 stagger-5"
+                >
+                  <h3
+                    class="text-base md:text-lg font-semibold text-white mb-1"
+                  >
+                    Categories
+                  </h3>
+                  <p class="text-xs text-gray-400 mb-4">By sales</p>
+                  <div class="relative w-32 h-32 md:w-40 md:h-40 mx-auto mb-4">
+                    <svg
+                      class="w-full h-full transform -rotate-90"
+                      viewbox="0 0 100 100"
+                    >
+                      <template
+                        x-for="(item, idx) in categoryData"
+                        :key="'donut-' + idx"
+                      >
+                        <circle
+                          :stroke="item.color"
+                          stroke-width="8"
+                          fill="none"
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          :stroke-dasharray="item.percentage * 2.51 + ' ' + (251 - item.percentage * 2.51)"
+                          :stroke-dashoffset="'-' + getCategoryOffset(idx)"
+                          class="transition-all duration-500"
+                        />
+                      </template>
+                    </svg>
+                    <div
+                      class="absolute inset-0 flex items-center justify-center flex-col"
+                    >
+                      <p
+                        class="text-lg md:text-xl font-bold text-white"
+                        x-text="categoryData.length"
+                      >
+                        0
+                      </p>
+                      <p class="text-xs text-gray-400">Total</p>
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <template
+                      x-for="item in categoryData.slice(0, 4)"
+                      :key="'cat-' + item.name"
+                    >
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                          <span
+                            class="w-2 h-2 rounded-full flex-shrink-0"
+                            :style="'background: ' + item.color"
+                          ></span>
+                          <span
+                            class="text-xs text-gray-300 truncate"
+                            x-text="item.name"
+                          ></span>
+                        </div>
+                        <span
+                          class="text-xs font-medium text-white flex-shrink-0"
+                          x-text="item.percentage + '%'"
+                        ></span>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+              <!-- Recent Sales & Top Products -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
+                <div class="glass rounded-xl p-4">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base md:text-lg font-semibold text-white">
+                      Recent
+                    </h3>
+                    <button
+                      @click="currentView = 'sales'"
+                      class="text-xs text-accent-primary hover:text-accent-secondary transition-colors"
+                    >
+                      View all →
+                    </button>
+                  </div>
+                  <div class="space-y-2">
+                    <template
+                      x-for="sale in filteredSales.slice(0, 4)"
+                      :key="'recent-' + sale.id"
+                    >
+                      <div
+                        @click="openSaleDetail(sale)"
+                        class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-all"
+                      >
+                        <div
+                          class="w-8 h-8 rounded bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 flex items-center justify-center text-accent-primary font-bold text-xs flex-shrink-0"
+                          x-text="sale.product.name.charAt(0)"
+                        ></div>
+                        <div class="flex-1 min-w-0">
+                          <p
+                            class="text-sm font-medium text-white truncate"
+                            x-text="sale.product.name"
+                          ></p>
+                          <p
+                            class="text-xs text-gray-400 truncate"
+                            x-text="sale.client.name"
+                          ></p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                          <p class="text-sm font-medium text-white">
+                            ₦<span x-text="formatNumber(sale.total)"></span>
+                          </p>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+                <div class="glass rounded-xl p-4">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base md:text-lg font-semibold text-white">
+                      Top Sellers
+                    </h3>
+                    <button
+                      @click="currentView = 'products'"
+                      class="text-xs text-accent-primary hover:text-accent-secondary transition-colors"
+                    >
+                      View all →
+                    </button>
+                  </div>
+                  <div class="space-y-2">
+                    <template
+                      x-for="(product, index) in topProducts.slice(0, 4)"
+                      :key="'top-prod-' + product.id"
+                    >
+                      <div
+                        class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 transition-all"
+                      >
+                        <span
+                          class="w-6 h-6 rounded-full bg-dark-600 flex items-center justify-center text-xs font-bold flex-shrink-0"
+                          :class="index === 0 ? 'text-yellow-400' : index === 1 ? 'text-gray-300' : 'text-gray-500'"
+                          x-text="index + 1"
+                        ></span>
+                        <div class="flex-1 min-w-0">
+                          <p
+                            class="text-sm font-medium text-white truncate"
+                            x-text="product.name"
+                          ></p>
+                          <p
+                            class="text-xs text-gray-400 truncate"
+                            x-text="product.brand"
+                          ></p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                          <p class="text-sm font-medium text-accent-success">
+                            ₦<span
+                              x-text="formatNumber(product.totalRevenue)"
+                            ></span>
+                          </p>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Sales View -->
+            <div
+              x-show="currentView === 'sales'"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0"
+              x-transition:enter-end="opacity-100"
+            >
+              <div class="glass rounded-xl overflow-hidden">
+                <div class="p-4 border-b border-white/5">
+                  <div class="flex flex-col gap-3">
+                    <div>
+                      <h2 class="text-lg md:text-xl font-semibold text-white">
+                        Sales
+                      </h2>
+                      <p class="text-xs text-gray-400">
+                        <span x-text="filteredSales.length">0</span>
+                        transactions
+                      </p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                      <select
+                        x-model="filters.category"
+                        @change="filterData()"
+                        class="px-3 py-2 bg-dark-600 border border-white/10 rounded-lg text-xs text-gray-300 focus:outline-none focus:border-accent-primary/50 flex-1"
+                      >
+                        <option value="">All Categories</option>
+                        <template x-for="cat in categories" :key="'cat-' + cat"
+                          ><option :value="cat" x-text="cat"></option>
+                        </template>
+                      </select>
+                      <select
+                        x-model="filters.staff"
+                        @change="filterData()"
+                        class="px-3 py-2 bg-dark-600 border border-white/10 rounded-lg text-xs text-gray-300 focus:outline-none focus:border-accent-primary/50 flex-1"
+                      >
+                        <option value="">All Staff</option>
+                        <template x-for="s in staffList" :key="'staff-' + s.id"
+                          ><option :value="s.id" x-text="s.name"></option>
+                        </template>
+                      </select>
+                      <select
+                        x-model="sortBy"
+                        @change="sortData()"
+                        class="px-3 py-2 bg-dark-600 border border-white/10 rounded-lg text-xs text-gray-300 focus:outline-none focus:border-accent-primary/50 flex-1"
+                      >
+                        <option value="date">Date</option>
+                        <option value="revenue">Revenue</option>
+                        <option value="quantity">Qty</option>
+                        <option value="margin">Margin</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="divide-y divide-white/5">
+                  <table class="w-full hidden md:table text-sm">
+                    <thead class="text-xs text-gray-400 bg-dark-700/50">
+                      <tr>
+                        <th class="px-4 py-3 text-left font-medium">Product</th>
+                        <th class="px-4 py-3 text-left font-medium">Client</th>
+                        <th class="px-4 py-3 text-left font-medium">Staff</th>
+                        <th class="px-4 py-3 text-right font-medium">Qty</th>
+                        <th class="px-4 py-3 text-right font-medium">Price</th>
+                        <th class="px-4 py-3 text-right font-medium">
+                          Discount
+                        </th>
+                        <th class="px-4 py-3 text-right font-medium">Total</th>
+                        <th class="px-4 py-3 text-right font-medium">Margin</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                      <template
+                        x-for="sale in paginatedSales"
+                        :key="'sale-' + sale.id"
+                      >
+                        <tr
+                          @click="openSaleDetail(sale)"
+                          class="table-row-hover cursor-pointer hover:bg-white/5"
+                        >
+                          <td class="px-4 py-3">
+                            <div class="flex items-center gap-2">
+                              <div
+                                class="w-8 h-8 rounded bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 flex items-center justify-center text-accent-primary font-bold text-xs"
+                                x-text="sale.product.name.charAt(0)"
+                              ></div>
+                              <div>
+                                <p
+                                  class="text-sm font-medium text-white"
+                                  x-text="sale.product.name"
+                                ></p>
+                                <p
+                                  class="text-xs text-gray-400"
+                                  x-text="sale.product.brand"
+                                ></p>
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            class="px-4 py-3 text-sm text-gray-300"
+                            x-text="sale.client.name"
+                          ></td>
+                          <td
+                            class="px-4 py-3 text-sm text-gray-300"
+                            x-text="sale.user.name"
+                          ></td>
+                          <td
+                            class="px-4 py-3 text-sm text-gray-300 text-right"
+                            x-text="sale.quantity"
+                          ></td>
+                          <td
+                            class="px-4 py-3 text-sm text-gray-300 text-right"
+                          >
+                            ₦<span x-text="formatNumber(sale.price)"></span>
+                          </td>
+                          <td
+                            class="px-4 py-3 text-sm text-accent-warning text-right"
+                          >
+                            -₦<span x-text="formatNumber(sale.discount)"></span>
+                          </td>
+                          <td
+                            class="px-4 py-3 text-sm font-medium text-white text-right"
+                          >
+                            ₦<span x-text="formatNumber(sale.total)"></span>
+                          </td>
+                          <td class="px-4 py-3 text-right">
+                            <span
+                              class="px-2 py-1 rounded text-xs font-medium"
+                              :class="getMarginClass(sale)"
+                            >
+                              <span x-text="calculateMargin(sale) + '%'"></span>
+                            </span>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                  <div class="md:hidden space-y-2 p-4">
+                    <template
+                      x-for="sale in paginatedSales"
+                      :key="'mobile-sale-' + sale.id"
+                    >
+                      <div
+                        @click="openSaleDetail(sale)"
+                        class="glass-light rounded-lg p-3 cursor-pointer hover:border-accent-primary/30"
+                      >
+                        <div class="flex items-start gap-3">
+                          <div
+                            class="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 flex items-center justify-center text-accent-primary font-bold flex-shrink-0"
+                            x-text="sale.product.name.charAt(0)"
+                          ></div>
+                          <div class="flex-1 min-w-0">
+                            <p
+                              class="text-sm font-medium text-white"
+                              x-text="sale.product.name"
+                            ></p>
+                            <p
+                              class="text-xs text-gray-400"
+                              x-text="sale.client.name + ' • ' + sale.user.name"
+                            ></p>
+                            <p
+                              class="text-xs text-gray-500 mt-1"
+                              x-text="formatDate(sale.created_at)"
+                            ></p>
+                          </div>
+                        </div>
+                        <div
+                          class="flex items-center justify-between mt-3 pt-3 border-t border-white/5"
+                        >
+                          <div>
+                            <p class="text-xs text-gray-400">Amount</p>
+                            <p class="text-sm font-medium text-white">
+                              ₦<span x-text="formatNumber(sale.total)"></span>
+                            </p>
+                          </div>
+                          <div class="text-right">
+                            <p class="text-xs text-gray-400">Margin</p>
+                            <p
+                              class="text-sm font-medium"
+                              :class="calculateMargin(sale) >= 30 ? 'text-accent-success' : calculateMargin(sale) >= 15 ? 'text-accent-warning' : 'text-accent-danger'"
+                              x-text="calculateMargin(sale) + '%'"
+                            ></p>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+                <div
+                  class="px-4 py-3 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
+                >
+                  <p class="text-gray-400">
+                    <span x-text="(currentPage - 1) * itemsPerPage + 1"></span
+                    >-<span
+                      x-text="Math.min(currentPage * itemsPerPage, filteredSales.length)"
+                    ></span>
+                    of <span x-text="filteredSales.length"></span>
+                  </p>
+                  <div class="flex items-center gap-1">
+                    <button
+                      @click="currentPage = Math.max(1, currentPage - 1)"
+                      :disabled="currentPage === 1"
+                      class="px-2 py-1 rounded text-gray-400 hover:text-white hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      Prev
+                    </button>
+                    <template x-for="page in totalPages" :key="'page-' + page"
+                      ><button
+                        @click="currentPage = page"
+                        :class="currentPage === page ? 'bg-accent-primary text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'"
+                        class="w-6 h-6 rounded text-xs transition-all"
+                        x-text="page"
+                      ></button> </template
+                    ><button
+                      @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                      :disabled="currentPage === totalPages"
+                      class="px-2 py-1 rounded text-gray-400 hover:text-white hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Products View -->
+            <div
+              x-show="currentView === 'products'"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0"
+              x-transition:enter-end="opacity-100"
+            >
+              <div class="glass rounded-xl p-4">
+                <h2 class="text-lg md:text-xl font-semibold text-white mb-4">
+                  Products
+                </h2>
+                <div
+                  class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6"
+                >
+                  <div class="glass-light rounded-lg p-3">
+                    <p class="text-xs text-gray-500 mb-1">Total</p>
+                    <p
+                      class="text-xl md:text-2xl font-bold text-white"
+                      x-text="uniqueProducts.length"
+                    >
+                      0
+                    </p>
+                  </div>
+                  <div class="glass-light rounded-lg p-3">
+                    <p class="text-xs text-gray-500 mb-1">Units Sold</p>
+                    <p
+                      class="text-xl md:text-2xl font-bold text-white"
+                      x-text="formatNumber(metrics.totalQuantity)"
+                    >
+                      0
+                    </p>
+                  </div>
+                  <div class="glass-light rounded-lg p-3">
+                    <p class="text-xs text-gray-500 mb-1">Avg Margin</p>
+                    <p
+                      class="text-xl md:text-2xl font-bold text-accent-success"
+                      x-text="metrics.avgMargin.toFixed(1) + '%'"
+                    >
+                      0%
+                    </p>
+                  </div>
+                  <div class="glass-light rounded-lg p-3">
+                    <p class="text-xs text-gray-500 mb-1">Low Stock</p>
+                    <p
+                      class="text-xl md:text-2xl font-bold text-accent-warning"
+                      x-text="lowStockProducts.length"
+                    >
+                      0
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+                >
+                  <template
+                    x-for="product in topProducts"
+                    :key="'prod-' + product.id"
+                  >
+                    <div
+                      class="glass-light rounded-lg p-3 hover:border-accent-primary/30 transition-all"
+                    >
+                      <div class="flex items-start justify-between mb-2">
+                        <div
+                          class="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 flex items-center justify-center text-accent-primary font-bold text-sm"
+                          x-text="product.name.charAt(0)"
+                        ></div>
+                        <span
+                          class="px-1.5 py-0.5 rounded text-xs"
+                          :class="product.available_stock < 50 ? 'bg-accent-danger/20 text-accent-danger' : 'bg-accent-success/20 text-accent-success'"
+                          x-text="product.available_stock < 50 ? 'Low' : 'OK'"
+                        ></span>
+                      </div>
+                      <h4
+                        class="font-medium text-white text-sm mb-0.5"
+                        x-text="product.name"
+                      ></h4>
+                      <p
+                        class="text-xs text-gray-400 mb-3"
+                        x-text="product.brand"
+                      ></p>
+                      <div
+                        class="grid grid-cols-2 gap-2 pt-3 border-t border-white/5"
+                      >
+                        <div>
+                          <p class="text-xs text-gray-500">Revenue</p>
+                          <p class="text-xs md:text-sm font-medium text-white">
+                            ₦<span
+                              x-text="formatNumber(product.totalRevenue)"
+                            ></span>
+                          </p>
+                        </div>
+                        <div>
+                          <p class="text-xs text-gray-500">Sold</p>
+                          <p
+                            class="text-xs md:text-sm font-medium text-white"
+                            x-text="product.totalQuantity"
+                          ></p>
+                        </div>
+                        <div>
+                          <p class="text-xs text-gray-500">Margin</p>
+                          <p
+                            class="text-xs md:text-sm font-medium text-accent-success"
+                            x-text="product.margin.toFixed(0) + '%'"
+                          ></p>
+                        </div>
+                        <div>
+                          <p class="text-xs text-gray-500">Stock</p>
+                          <p
+                            class="text-xs md:text-sm font-medium"
+                            :class="product.available_stock < 50 ? 'text-accent-danger' : 'text-white'"
+                            x-text="product.available_stock"
+                          ></p>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+            <!-- Staff View -->
+            <div
+              x-show="currentView === 'staff'"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0"
+              x-transition:enter-end="opacity-100"
+            >
+              <div class="glass rounded-xl p-4">
+                <h2 class="text-lg md:text-xl font-semibold text-white mb-4">
+                  Staff Performance
+                </h2>
+                <div class="space-y-3">
+                  <template
+                    x-for="(staff, index) in staffPerformance"
+                    :key="'staff-perf-' + staff.id"
+                  >
+                    <div
+                      class="glass-light rounded-lg p-3 hover:border-accent-primary/30 transition-all"
+                    >
+                      <div class="flex items-center gap-3 mb-3">
+                        <span
+                          class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                          :class="index === 0 ? 'bg-yellow-500/20 text-yellow-400' : index === 1 ? 'bg-gray-400/20 text-gray-300' : index === 2 ? 'bg-amber-600/20 text-amber-500' : 'bg-dark-600 text-gray-400'"
+                          x-text="index + 1"
+                        ></span>
+                        <div
+                          class="w-8 h-8 rounded-full bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+                          x-text="staff.name.charAt(0)"
+                        ></div>
+                        <div class="flex-1 min-w-0">
+                          <h4
+                            class="font-medium text-white text-sm"
+                            x-text="staff.name"
+                          ></h4>
+                          <p class="text-xs text-gray-400">
+                            <span x-text="staff.salesCount"></span> sales
+                          </p>
+                        </div>
+                      </div>
+                      <div
+                        class="grid grid-cols-3 gap-2 mb-3 text-center text-xs"
+                      >
+                        <div>
+                          <p class="text-gray-500">Revenue</p>
+                          <p class="font-medium text-white">
+                            ₦<span
+                              x-text="formatNumber(staff.totalRevenue)"
+                            ></span>
+                          </p>
+                        </div>
+                        <div>
+                          <p class="text-gray-500">Avg Order</p>
+                          <p class="font-medium text-accent-primary">
+                            ₦<span
+                              x-text="formatNumber(staff.avgOrderValue)"
+                            ></span>
+                          </p>
+                        </div>
+                        <div>
+                          <p class="text-gray-500">Avg Disc</p>
+                          <p class="font-medium text-accent-warning">
+                            <span x-text="staff.avgDiscount.toFixed(1)">0</span
+                            >%
+                          </p>
+                        </div>
+                      </div>
+                      <div
+                        class="h-1.5 bg-dark-600 rounded-full overflow-hidden"
+                      >
+                        <div
+                          class="h-full bg-gradient-to-r from-accent-primary to-accent-secondary rounded-full transition-all duration-500"
+                          :style="'width: ' + (staff.totalRevenue / staffPerformance[0].totalRevenue * 100) + '%'"
+                        ></div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+            <!-- Analytics View -->
+            <div
+              x-show="currentView === 'analytics'"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0"
+              x-transition:enter-end="opacity-100"
+            >
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="glass rounded-xl p-4">
+                  <h3
+                    class="text-base md:text-lg font-semibold text-white mb-4"
+                  >
+                    Profit Analysis
+                  </h3>
+                  <div class="space-y-3">
+                    <div
+                      class="flex items-center justify-between p-3 glass-light rounded-lg"
+                    >
+                      <div>
+                        <p class="text-xs text-gray-400">Gross Revenue</p>
+                        <p class="text-lg md:text-xl font-bold text-white">
+                          ₦<span
+                            x-text="formatNumber(metrics.totalSales)"
+                          ></span>
+                        </p>
+                      </div>
+                      <div
+                        class="w-10 h-10 rounded-lg bg-accent-success/20 flex items-center justify-center flex-shrink-0"
+                      >
+                        <svg
+                          class="w-5 h-5 text-accent-success"
+                          fill="none"
+                          stroke="currentColor"
+                          viewbox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div
+                      class="flex items-center justify-between p-3 glass-light rounded-lg"
+                    >
+                      <div>
+                        <p class="text-xs text-gray-400">Total Cost</p>
+                        <p
+                          class="text-lg md:text-xl font-bold text-accent-danger"
+                        >
+                          ₦<span
+                            x-text="formatNumber(metrics.totalCost)"
+                          ></span>
+                        </p>
+                      </div>
+                      <div
+                        class="w-10 h-10 rounded-lg bg-accent-danger/20 flex items-center justify-center flex-shrink-0"
+                      >
+                        <svg
+                          class="w-5 h-5 text-accent-danger"
+                          fill="none"
+                          stroke="currentColor"
+                          viewbox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div
+                      class="flex items-center justify-between p-3 glass-light rounded-lg border border-accent-primary/30"
+                    >
+                      <div>
+                        <p class="text-xs text-gray-400">Net Profit</p>
+                        <p
+                          class="text-lg md:text-xl font-bold text-accent-primary"
+                        >
+                          ₦<span
+                            x-text="formatNumber(metrics.netProfit)"
+                          ></span>
+                        </p>
+                      </div>
+                      <div
+                        class="w-10 h-10 rounded-lg bg-accent-primary/20 flex items-center justify-center flex-shrink-0"
+                      >
+                        <svg
+                          class="w-5 h-5 text-accent-primary"
+                          fill="none"
+                          stroke="currentColor"
+                          viewbox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="glass rounded-xl p-4">
+                  <h3
+                    class="text-base md:text-lg font-semibold text-white mb-4"
+                  >
+                    Peak Sales Times
+                  </h3>
+                  <div class="space-y-2 text-xs overflow-x-auto">
+                    <div class="flex items-center gap-2 mb-3">
+                      <span class="w-12"></span>
+                      <template
+                        x-for="(day, dayIdx) in ['M', 'T', 'W', 'Th', 'F', 'S', 'Su']"
+                        :key="'day-' + dayIdx"
+                        ><span
+                          class="flex-1 text-center text-gray-500 min-w-[30px]"
+                          x-text="day"
+                        ></span>
+                      </template>
+                    </div>
+                    <template
+                      x-for="(row, hourIndex) in heatmapData"
+                      :key="'heat-' + hourIndex"
+                    >
+                      <div class="flex items-center gap-2">
+                        <span
+                          class="w-12 text-gray-500 text-right text-xs"
+                          x-text="row.hour"
+                        ></span>
+                        <template
+                          x-for="(value, dayIndex) in row.values"
+                          :key="'cell-' + hourIndex + '-' + dayIndex"
+                        >
+                          <div
+                            class="flex-1 h-4 rounded transition-all cursor-pointer hover:scale-110 min-w-[30px]"
+                            :style="'background: rgba(99, 102, 241, ' + (value / 100) + ')'"
+                          ></div>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Settings View -->
+            <div
+              x-show="currentView === 'settings'"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0"
+              x-transition:enter-end="opacity-100"
+            >
+              <div class="glass rounded-xl p-4 max-w-2xl">
+                <h2 class="text-lg md:text-xl font-semibold text-white mb-4">
+                  Settings
+                </h2>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-xs text-gray-400 mb-1.5"
+                      >Dashboard Title</label
+                    >
+                    <input
+                      type="text"
+                      readonly
+                      x-model="dashboardTitle"
+                      class="w-full px-3 py-2 bg-dark-600 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-primary/50"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs text-gray-400 mb-1.5"
+                      >Company Name</label
+                    >
+                    <input
+                      type="text"
+                      x-model="companyName"
+                      class="w-full px-3 py-2 bg-dark-600 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-primary/50"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs text-gray-400 mb-1.5"
+                      >Items Per Page</label
+                    >
+                    <select
+                      x-model="itemsPerPage"
+                      class="w-full px-3 py-2 bg-dark-600 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-accent-primary/50"
+                    >
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                    </select>
+                  </div>
+                  <!-- <div class="pt-3 border-t border-white/10">
+                    <p class="text-xs text-gray-400 mb-2">API Status</p>
+                    <div class="glass-light rounded-lg p-3">
+                      <code
+                        class="text-xs text-accent-primary font-mono leading-relaxed"
+                      >
+                        Server: https://api.example.com<br />
+                        Status: Demo Mode<br />
+                        Token: LIVE_TOKEN_FROM_IFRAME
+                      </code>
+                    </div>
+                  </div> -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <!-- Mobile Bottom Navigation -->
+      <nav
+        class="fixed md:hidden bottom-0 left-0 right-0 glass-light border-t border-white/5 flex items-center justify-around px-2 py-2 animate-slide-in-up z-40"
+      >
+        <template x-for="(item, index) in navItems" :key="'nav-' + item.id"
+          ><button
+            @click="currentView = item.id"
+            :class="[
+            'nav-active flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-lg transition-all flex-1',
+            currentView === item.id 
+              ? 'nav-btn-active text-accent-primary' 
+              : 'text-gray-400 hover:text-white',
+          ]"
+          >
+            <span x-html="item.icon" class="w-5 h-5 nav-icon"></span>
+            <span
+              class="text-xs font-medium hidden sm:block"
+              x-text="item.label"
+            ></span>
+          </button>
+        </template>
+      </nav>
+      <!-- Sale Detail Modal -->
+      <div
+        x-show="showSaleModal"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4"
+        @click.self="showSaleModal = false"
+      >
+        <div
+          x-show="showSaleModal"
+          x-transition:enter="transition ease-out duration-300"
+          x-transition:enter-start="opacity-0 scale-95"
+          x-transition:enter-end="opacity-100 scale-100"
+          class="glass rounded-xl w-full max-w-2xl max-h-[90%] overflow-y-auto"
+          @click.stop
+        >
+          <div
+            class="p-4 md:p-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-dark-700/50 backdrop-blur"
+          >
+            <h3 class="text-base md:text-lg font-semibold text-white">
+              Sale Details
+            </h3>
+            <button
+              @click="showSaleModal = false"
+              class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all flex-shrink-0"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewbox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+          <div x-show="selectedSale" class="p-4 md:p-6 space-y-4">
+            <div class="glass-light rounded-lg p-4">
+              <h4 class="text-sm text-gray-400 mb-3">Product Information</h4>
+              <div class="flex items-center gap-4">
+                <div
+                  class="w-12 h-12 md:w-16 md:h-16 rounded-lg bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 flex items-center justify-center text-xl md:text-2xl text-accent-primary font-bold flex-shrink-0"
+                  x-text="selectedSale?.product?.name?.charAt(0)"
+                ></div>
+                <div>
+                  <p
+                    class="font-medium text-white text-sm md:text-base"
+                    x-text="selectedSale?.product?.name"
+                  ></p>
+                  <p
+                    class="text-xs text-gray-400"
+                    x-text="selectedSale?.product?.brand + ' • ' + selectedSale?.product?.category"
+                  ></p>
+                  <div
+                    class="flex items-center gap-2 mt-2 text-xs text-gray-500"
+                  >
+                    <span
+                      >Color:
+                      <span
+                        class="text-gray-300"
+                        x-text="selectedSale?.product?.color"
+                      ></span
+                    ></span>
+                    <span>•</span>
+                    <span
+                      >Size:
+                      <span
+                        class="text-gray-300"
+                        x-text="selectedSale?.product?.size"
+                      ></span
+                    ></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="glass-light rounded-lg p-3">
+                <p class="text-xs text-gray-400 mb-1">Quantity</p>
+                <p
+                  class="text-xl font-bold text-white"
+                  x-text="selectedSale?.quantity"
+                ></p>
+              </div>
+              <div class="glass-light rounded-lg p-3">
+                <p class="text-xs text-gray-400 mb-1">Unit Price</p>
+                <p class="text-xl font-bold text-white">
+                  ₦<span x-text="formatNumber(selectedSale?.price)"></span>
+                </p>
+              </div>
+              <div class="glass-light rounded-lg p-3">
+                <p class="text-xs text-gray-400 mb-1">Discount</p>
+                <p class="text-xl font-bold text-accent-warning">
+                  -₦<span x-text="formatNumber(selectedSale?.discount)"></span>
+                </p>
+              </div>
+              <div
+                class="glass-light rounded-lg p-3 border border-accent-primary/30"
+              >
+                <p class="text-xs text-gray-400 mb-1">Total</p>
+                <p class="text-xl font-bold text-accent-primary">
+                  ₦<span x-text="formatNumber(selectedSale?.total)"></span>
+                </p>
+              </div>
+            </div>
+            <div class="glass-light rounded-lg p-4">
+              <h4 class="text-sm text-gray-400 mb-3">Profit Margin</h4>
+              <div class="flex items-center justify-between text-xs mb-3">
+                <div>
+                  <p class="text-gray-500">
+                    Sale: ₦<span
+                      x-text="selectedSale?.product?.sale_price"
+                    ></span>
+                  </p>
+                  <p class="text-gray-500">
+                    Cost: ₦<span
+                      x-text="selectedSale?.product?.stock_price"
+                    ></span>
+                  </p>
+                </div>
+                <div class="text-right">
+                  <p class="text-gray-400">Margin per unit</p>
+                  <p class="text-lg font-bold text-accent-success">
+                    ₦<span
+                      x-text="selectedSale ? (selectedSale.product.sale_price - selectedSale.product.stock_price) : 0"
+                    ></span>
+                  </p>
+                </div>
+              </div>
+              <div class="h-2 bg-dark-600 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-gradient-to-r from-accent-success to-accent-primary rounded-full"
+                  :style="'width: ' + calculateMargin(selectedSale) + '%'"
+                ></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="glass-light rounded-lg p-3">
+                <h4 class="text-xs text-gray-400 mb-2">Client</h4>
+                <p
+                  class="font-medium text-white text-sm"
+                  x-text="selectedSale?.client?.name"
+                ></p>
+                <p class="text-xs text-gray-500">
+                  ID: #<span x-text="selectedSale?.client?.id"></span>
+                </p>
+              </div>
+              <div class="glass-light rounded-lg p-3">
+                <h4 class="text-xs text-gray-400 mb-2">Staff</h4>
+                <p
+                  class="font-medium text-white text-sm"
+                  x-text="selectedSale?.user?.name"
+                ></p>
+                <p class="text-xs text-gray-500">
+                  ID: #<span x-text="selectedSale?.user?.id"></span>
+                </p>
+              </div>
+            </div>
+            <p class="text-center text-xs text-gray-400 pt-2">
+              Date:
+              <span
+                class="text-white"
+                x-text="selectedSale ? formatDate(selectedSale.created_at) : ''"
+              ></span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- Toast -->
+      <div
+        x-show="showToast"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-4"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        class="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-50"
+      >
+        <div
+          class="glass rounded-lg px-4 py-3 md:px-6 md:py-4 flex items-center gap-3"
+        >
+          <svg
+            class="w-4 h-4 md:w-5 md:h-5 text-accent-success"
+            fill="none"
+            stroke="currentColor"
+            viewbox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          <span class="text-sm text-white" x-text="toastMessage"></span>
+        </div>
+      </div>
+    </div>
+    <script>
+      const server = "http://127.0.0.1/api/v1/sales";
+      const headers = {
+        "X-App-Source": "Sale-X",
+        "X-Token": "LIVE_TOKEN_FROM_IFRAME",
+        Accept: "application/json",
+      };
+
+      function saleXDashboard() {
+        return {
+          sales: [],
+          filteredSales: [],
+          currentView: "dashboard",
+          searchQuery: "",
+          dateRange: "30d",
+          sortBy: "date",
+          currentPage: 1,
+          itemsPerPage: 10,
+          chartType: "revenue",
+          showSaleModal: false,
+          selectedSale: null,
+          showToast: false,
+          toastMessage: "",
+          dashboardTitle: "Sale-X",
+          companyName: "Admin",
+          filters: { category: "", staff: "", product: "" },
+          navItems: [
+            {
+              id: "dashboard",
+              label: "Dashboard",
+              icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>',
+            },
+            {
+              id: "sales",
+              label: "Sales",
+              icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>',
+              badge: "12",
+            },
+            {
+              id: "products",
+              label: "Products",
+              icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>',
+            },
+            {
+              id: "staff",
+              label: "Staff",
+              icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>',
+            },
+            {
+              id: "analytics",
+              label: "Analytics",
+              icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
+            },
+            {
+              id: "settings",
+              label: "Settings",
+              icon: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
+            },
+          ],
+          buildMonthlyData() {
+            const months = [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ];
+            const map = Array.from({ length: 12 }, (_, i) => ({
+              name: months[i],
+              revenue: 0,
+              orders: 0,
+            }));
+
+            this.sales.forEach((s) => {
+              const d = new Date(s.created_at);
+              const m = d.getMonth();
+              map[m].revenue += s.total;
+              map[m].orders += 1;
+            });
+
+            this.monthlyData = map;
+          },
+
+          buildHeatmapData() {
+            const hours = [9, 12, 15, 18, 21];
+            const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+            const grid = hours.map((h) => ({
+              hour: `${h > 12 ? h - 12 : h}${h >= 12 ? "PM" : "AM"}`,
+              values: Array(7).fill(0),
+            }));
+
+            this.sales.forEach((s) => {
+              const d = new Date(s.created_at);
+              const hour = d.getHours();
+              const day = d.getDay();
+
+              const row = hours.findIndex((h) => hour >= h && hour < h + 3);
+              if (row !== -1) grid[row].values[day] += s.total;
+            });
+
+            this.heatmapData = grid;
+          },
+          get maxRevenue() {
+            return Math.max(...this.monthlyData.map((m) => m.revenue));
+          },
+          get maxOrders() {
+            return Math.max(...this.monthlyData.map((m) => m.orders));
+          },
+          get metrics() {
+            const t = this.filteredSales.reduce((s, a) => s + a.total, 0),
+              d = this.filteredSales.reduce((s, a) => s + a.discount, 0),
+              q = this.filteredSales.reduce((s, a) => s + a.quantity, 0),
+              c = this.filteredSales.reduce(
+                (s, a) => s + a.product.stock_price * a.quantity,
+                0,
+              ),
+              n = t - c - d,
+              avg =
+                this.filteredSales.length > 0
+                  ? t / this.filteredSales.length
+                  : 0,
+              m =
+                this.filteredSales.length > 0
+                  ? this.filteredSales.reduce(
+                      (s, a) => s + this.calculateMarginValue(a),
+                      0,
+                    ) / this.filteredSales.length
+                  : 0;
+            return {
+              totalSales: t,
+              totalDiscount: d,
+              totalQuantity: q,
+              totalCost: c,
+              netProfit: n,
+              avgOrderValue: avg,
+              avgMargin: m,
+            };
+          },
+          get categories() {
+            return [...new Set(this.sales.map((s) => s.product.category))];
+          },
+          get staffList() {
+            const m = new Map();
+            this.sales.forEach((s) => m.set(s.user.id, s.user));
+            return [...m.values()];
+          },
+          get uniqueProducts() {
+            const m = new Map();
+            this.sales.forEach((s) => m.set(s.product.id, s.product));
+            return [...m.values()];
+          },
+          get categoryData() {
+            const m = new Map();
+            this.filteredSales.forEach((s) => {
+              const c = s.product.category;
+              m.set(c, (m.get(c) || 0) + s.total);
+            });
+            const t = this.metrics.totalSales || 1,
+              cols = [
+                "#6366f1",
+                "#8b5cf6",
+                "#a855f7",
+                "#ec4899",
+                "#f43f5e",
+                "#10b981",
+                "#f59e0b",
+              ];
+            return [...m.entries()].map(([n, v], i) => ({
+              name: n,
+              value: v,
+              percentage: Math.round((v / t) * 100),
+              color: cols[i % cols.length],
+            }));
+          },
+          get topProducts() {
+            const m = new Map();
+            this.filteredSales.forEach((s) => {
+              const id = s.product.id;
+              if (!m.has(id))
+                m.set(id, {
+                  ...s.product,
+                  totalRevenue: 0,
+                  totalQuantity: 0,
+                  margin:
+                    ((s.product.sale_price - s.product.stock_price) /
+                      s.product.sale_price) *
+                    100,
+                });
+              const p = m.get(id);
+              p.totalRevenue += s.total;
+              p.totalQuantity += s.quantity;
+            });
+            return [...m.values()].sort(
+              (a, b) => b.totalRevenue - a.totalRevenue,
+            );
+          },
+          get lowStockProducts() {
+            return this.uniqueProducts.filter((p) => p.available_stock < 50);
+          },
+          get staffPerformance() {
+            const m = new Map();
+            this.filteredSales.forEach((s) => {
+              const id = s.user.id;
+              if (!m.has(id))
+                m.set(id, {
+                  ...s.user,
+                  salesCount: 0,
+                  totalRevenue: 0,
+                  totalDiscount: 0,
+                });
+              const st = m.get(id);
+              st.salesCount++;
+              st.totalRevenue += s.total;
+              st.totalDiscount += s.discount;
+            });
+            return [...m.values()]
+              .map((s) => ({
+                ...s,
+                avgOrderValue:
+                  s.salesCount > 0 ? s.totalRevenue / s.salesCount : 0,
+                avgDiscount:
+                  s.totalRevenue > 0
+                    ? (s.totalDiscount / s.totalRevenue) * 100
+                    : 0,
+              }))
+              .sort((a, b) => b.totalRevenue - a.totalRevenue);
+          },
+          get paginatedSales() {
+            const s = (this.currentPage - 1) * this.itemsPerPage;
+            return this.filteredSales.slice(s, s + this.itemsPerPage);
+          },
+          get totalPages() {
+            return Math.ceil(this.filteredSales.length / this.itemsPerPage);
+          },
+
+          init() {
+            this.loadData();
+          },
+          loadData() {
+            fetch(server, { headers })
+              .then((res) => res.json())
+              .then((res) => {
+                const sales =
+                  res.sales || res.data || res.payload || res.results || [];
+
+                if (!Array.isArray(sales)) {
+                  throw new Error("API did not return sales array");
+                }
+
+                this.sales = sales.map((s) => ({
+                  ...s,
+                  quantity: Number(s.quantity ?? 0),
+                  price: Number(s.price ?? 0),
+                  total: Number(s.total ?? 0),
+                  discount: Number(s.discount ?? 0),
+                  product: {
+                    ...s.product,
+                    stock_price: Number(s.product?.stock_price ?? 0),
+                    sale_price: Number(s.product?.sale_price ?? 0),
+                    available_stock: Number(s.product?.available_stock ?? 0),
+                  },
+                }));
+                this.buildMonthlyData();
+                this.buildHeatmapData();
+
+                this.filteredSales = [...this.sales];
+                this.sortData();
+              })
+              .catch((err) => {
+                console.error("Sale-X API failed:", err);
+                this.sales = [];
+                this.filteredSales = [];
+              });
+          },
+          filterData() {
+            let f = [...this.sales];
+            if (this.searchQuery) {
+              const q = this.searchQuery.toLowerCase();
+              f = f.filter(
+                (s) =>
+                  s.product.name.toLowerCase().includes(q) ||
+                  s.client.name.toLowerCase().includes(q) ||
+                  s.user.name.toLowerCase().includes(q) ||
+                  s.product.brand.toLowerCase().includes(q),
+              );
+            }
+            if (this.filters.category)
+              f = f.filter((s) => s.product.category === this.filters.category);
+            if (this.filters.staff)
+              f = f.filter((s) => s.user.id == this.filters.staff);
+            this.filteredSales = f;
+            this.currentPage = 1;
+            this.sortData();
+          },
+          sortData() {
+            switch (this.sortBy) {
+              case "date":
+                this.filteredSales.sort(
+                  (a, b) => new Date(b.created_at) - new Date(a.created_at),
+                );
+                break;
+              case "revenue":
+                this.filteredSales.sort((a, b) => b.total - a.total);
+                break;
+              case "quantity":
+                this.filteredSales.sort((a, b) => b.quantity - a.quantity);
+                break;
+              case "margin":
+                this.filteredSales.sort(
+                  (a, b) =>
+                    this.calculateMarginValue(b) - this.calculateMarginValue(a),
+                );
+                break;
+            }
+          },
+          calculateMargin(s) {
+            if (!s) return 0;
+            const p = s.product.sale_price - s.product.stock_price;
+            return Math.round((p / s.product.sale_price) * 100);
+          },
+          calculateMarginValue(s) {
+            const p = s.product.sale_price - s.product.stock_price;
+            return (p / s.product.sale_price) * 100;
+          },
+          getMarginClass(s) {
+            const m = this.calculateMargin(s);
+            return m >= 30
+              ? "bg-accent-success/20 text-accent-success"
+              : m >= 15
+                ? "bg-accent-warning/20 text-accent-warning"
+                : "bg-accent-danger/20 text-accent-danger";
+          },
+          getCategoryOffset(i) {
+            let o = 0;
+            for (let j = 0; j < i; j++)
+              o += this.categoryData[j].percentage * 2.51;
+            return o;
+          },
+          formatNumber(n) {
+            return n
+              ? n.toLocaleString("en-US", { maximumFractionDigits: 0 })
+              : "0";
+          },
+          formatDate(d) {
+            return new Date(d).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+          },
+          openSaleDetail(s) {
+            this.selectedSale = s;
+            this.showSaleModal = true;
+          },
+          showToastMessage(m) {
+            this.toastMessage = m;
+            this.showToast = true;
+            setTimeout(() => (this.showToast = false), 3000);
+          },
+          exportCSV() {
+            const h = [
+                "ID",
+                "Product",
+                "Client",
+                "Staff",
+                "Qty",
+                "Price",
+                "Discount",
+                "Total",
+                "Date",
+              ],
+              r = this.filteredSales.map((s) => [
+                s.id,
+                s.product.name,
+                s.client.name,
+                s.user.name,
+                s.quantity,
+                s.price,
+                s.discount,
+                s.total,
+                s.created_at,
+              ]),
+              csv = [h, ...r].map((row) => row.join(",")).join("\n"),
+              b = new Blob([csv], { type: "text/csv" }),
+              url = URL.createObjectURL(b),
+              a = document.createElement("a");
+            a.href = url;
+            a.download = "sale-x-export.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+            this.showToastMessage("CSV exported!");
+          },
+          printReport() {
+            window.print();
+            this.showToastMessage("Preparing print...");
+          },
+        };
+      }
+    </script>
+  </body>
+</html>
