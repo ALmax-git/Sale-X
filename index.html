@@ -1738,7 +1738,16 @@
       const source = p.get("X-App-Source") || "Sale-X";
 
       if (!base || !api || !token) {
-        throw new Error("Missing iframe auth params");
+        document.body.innerHTML = `
+          <div class="flex items-center justify-center min-h-screen bg-dark-800 text-white p-4">
+            <div class="max-w-md text-center">
+              <h1 class="text-2xl font-bold mb-4">Configuration Error</h1>
+              <p class="mb-4">Missing required parameters. Please ensure the URL contains X-Server, X-API, and X-Token parameters.</p>
+              <p class="text-sm text-gray-400">Example URL: ?X-Server=https://api.example.com&X-API=/v1/sales&X-Token=your_token_here</p>
+            </div>
+          </div>
+        `;
+        throw new Error("Missing required parameters");
       }
 
       const server = base.replace(/\/$/, "") + api;
