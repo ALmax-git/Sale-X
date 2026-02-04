@@ -1730,12 +1730,28 @@
       </div>
     </div>
     <script>
-      const server = "http://127.0.0.1/api/v1/sales";
-      const headers = {
-        "X-App-Source": "Sale-X",
-        "X-Token": "LIVE_TOKEN_FROM_IFRAME",
-        Accept: "application/json",
-      };
+      function getRuntimeConfig() {
+        const p = new URLSearchParams(window.location.search);
+
+        const base = p.get("X-Server");
+        const api = p.get("X-API");
+        const token = p.get("X-Token");
+        const source = p.get("X-App-Source") || "Sale-X";
+
+        if (!base || !api || !token) {
+          throw new Error("Missing iframe auth params");
+        }
+
+        return {
+          server: base.replace(/\/$/, "") + api,
+          headers: {
+            "X-App-Source": source,
+            "X-Token": token,
+            Accept: "application/json",
+          },
+        };
+      }
+      const { server, headers } = getRuntimeConfig();
 
       function saleXDashboard() {
         return {
