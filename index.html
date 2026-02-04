@@ -1747,12 +1747,24 @@
             </div>
           </div> 
         `;
+        F;
+        console.error(
+          "Base: " + base,
+          "API: " + api,
+          "Token: " + token,
+          "Source: " + source,
+        );
         console.error(base, api, token);
         throw new Error("Missing required parameters");
       }
 
       const server = base + api + token + source;
-      console.error(base, api, token);
+      console.error(
+        "Base: " + base,
+        "API: " + api,
+        "Token: " + token,
+        "Source: " + source,
+      );
       console.log("API Server:", server);
       const headers = {
         "X-App-Source": source,
