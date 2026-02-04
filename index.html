@@ -1745,12 +1745,14 @@
               <p class="mb-4">Missing required parameters. Please ensure the URL contains X-Server, X-API, and X-Token parameters.</p>
               <p class="text-sm text-gray-400">Example URL: ?X-Server=https://api.example.com&X-API=/v1/sales&X-Token=your_token_here</p>
             </div>
-          </div>
+          </div> 
         `;
+        console.error(base, api, token);
         throw new Error("Missing required parameters");
       }
 
       const server = base.replace(/\/$/, "") + api;
+      console.log("API Server:", server);
       const headers = {
         "X-App-Source": source,
         "X-Token": token,
