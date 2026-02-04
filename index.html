@@ -1730,27 +1730,23 @@
       </div>
     </div>
     <script>
-      function getRuntimeConfig() {
-        const p = new URLSearchParams(window.location.search);
+      const p = new URLSearchParams(window.location.search);
 
-        const base = p.get("X-Server");
-        const api = p.get("X-API");
-        const token = p.get("X-Token");
-        const source = p.get("X-App-Source") || "Sale-X";
+      const base = p.get("X-Server");
+      const api = p.get("X-API");
+      const token = p.get("X-Token");
+      const source = p.get("X-App-Source") || "Sale-X";
 
-        if (!base || !api || !token) {
-          throw new Error("Missing iframe auth params");
-        }
-
-        return {
-          server: base.replace(/\/$/, "") + api,
-          headers: {
-            "X-App-Source": source,
-            "X-Token": token,
-            Accept: "application/json",
-          },
-        };
+      if (!base || !api || !token) {
+        throw new Error("Missing iframe auth params");
       }
+
+      const server = base.replace(/\/$/, "") + api;
+      const headers = {
+        "X-App-Source": source,
+        "X-Token": token,
+        Accept: "application/json",
+      };
 
       function saleXDashboard() {
         return {
@@ -1988,13 +1984,6 @@
           },
 
           init() {
-            try {
-              const { server, headers } = getRuntimeConfig();
-              console.log("Server:", server, "Headers:", headers);
-              // Now you can safely use `server` and `headers` here
-            } catch (err) {
-              console.error("Error initializing Sale-X iframe:", err);
-            }
             this.loadData();
           },
           loadData() {
