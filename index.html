@@ -1495,7 +1495,7 @@
                       >
                         Server: https://api.example.com<br />
                         Status: Demo Mode<br />
-                        Token: LIVE_TOKEN_FROM_IFRAME
+                        Token: 
                       </code>
                     </div>
                   </div> -->
@@ -1751,7 +1751,6 @@
           },
         };
       }
-      const { server, headers } = getRuntimeConfig();
 
       function saleXDashboard() {
         return {
@@ -1989,6 +1988,13 @@
           },
 
           init() {
+            try {
+              const { server, headers } = getRuntimeConfig();
+              console.log("Server:", server, "Headers:", headers);
+              // Now you can safely use `server` and `headers` here
+            } catch (err) {
+              console.error("Error initializing Sale-X iframe:", err);
+            }
             this.loadData();
           },
           loadData() {
